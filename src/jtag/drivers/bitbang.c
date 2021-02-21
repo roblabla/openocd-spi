@@ -389,9 +389,17 @@ static int bitbang_swd_init(void)
 	return ERROR_OK;
 }
 
+#if BUILD_BCM2835SPI == 1
+void spi_exchange(bool rnw, uint8_t buf[], unsigned int offset, unsigned int bit_cnt);
+#endif  //  BUILD_BCM2835SPI == 1
+
 static void bitbang_swd_exchange(bool rnw, uint8_t buf[], unsigned int offset, unsigned int bit_cnt)
 {
 	LOG_DEBUG("bitbang_swd_exchange");
+
+#if BUILD_BCM2835SPI == 1  //  Transmit and receive SWD commands over SPI...
+	spi_exchange(rnw, buf, offset, bit_cnt);
+#else  //  Transmit and receive SWD commands over GPIO...
 
 	if (bitbang_interface->blink) {
 		/* FIXME: we should manage errors */
@@ -419,6 +427,7 @@ static void bitbang_swd_exchange(bool rnw, uint8_t buf[], unsigned int offset, u
 		/* FIXME: we should manage errors */
 		bitbang_interface->blink(0);
 	}
+#endif  //  BUILD_BCM2835SPI == 1
 }
 
 static int bitbang_swd_switch_seq(enum swd_special_seq seq)
